@@ -4,10 +4,11 @@ const cors = require('cors');
 
 // Create an express app
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 // Enable CORS (optional, depending on your frontend's needs)
 app.use(cors());
+app.use(express.json());
 
 // Create a connection to MariaDB
 const db = mysql.createConnection({
@@ -29,15 +30,16 @@ db.connect((err) => {
 // Example POST endpoint for saving data to MariaDB
 app.post('/log', (req, res) => {
   console.log("request from ", req.ip)
-  const { primaryPlan, secondaryPlan, time, ip } = req.body;
+  const ip = req.ip ? req.ip : "no-ip"
+  const { primaryPlan, secondaryPlan, time } = req.body;
 
-  if (!primaryPlan || !secondaryPlan || !time || !ip) {
+  if (!primaryPlan || !secondaryPlan || !time) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   const query = 'INSERT INTO log (primaryPlan, secondaryPlan, time, ip) VALUES (?, ?, ?, ?)';
 
-  db.execute(query, [primaryPlan, secondaryPlan, time, ip], (err, results) => {
+  db.query(query, [primaryPlan, secondaryPlan, time, ip], (err, results) => {
     if (err) {
       console.error('Error saving data:', err);
       return res.status(500).json({ error: 'Server error while saving data' });
@@ -50,7 +52,7 @@ app.post('/log', (req, res) => {
         primaryPlan: primaryPlan,
         secondaryPlan: secondaryPlan,
         time: time,
-	ip: ip
+        ip: ip
       },
     });
   });
